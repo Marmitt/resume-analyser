@@ -1,6 +1,8 @@
 import os
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
+import fitz
+import docx
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -43,12 +45,25 @@ def extract_text(filepath):
         return extract_text_from_docx(filepath)
     return "Unsupported file type"
 
-# Basic placeholder functions
+# Extract text from PDF
 def extract_text_from_pdf(filepath):
-    return "[PDF parsing not yet implemented]"
+    try:
+        text = ""
+        pdf = fitz.open(filepath)
+        for page in pdf:
+            text += page.get_text()
+        return text if text.strip() else "[No extractable text found in PDF]"
+    except Exception as e:
+        return f"[Error reading PDF: {e}]"
 
+# Extract text from DOCX
 def extract_text_from_docx(filepath):
-    return "[DOCX parsing not yet implemented]"
+    try:
+        doc = docx.Document(filepath)
+        text = "\n".join([para.text for para in doc.paragraphs])
+        return text if text.strip() else "[No extractable text found in DOCX]"
+    except Exception as e:
+        return f"[Error reading DOCX: {e}]"
 
 if __name__ == '__main__':
     app.run(debug=True)
