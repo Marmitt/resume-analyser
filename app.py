@@ -7,6 +7,7 @@ from markupsafe import Markup
 from werkzeug.utils import secure_filename
 from xhtml2pdf import pisa
 from io import BytesIO
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -29,6 +30,10 @@ KNOWN_SKILLS = [
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.template_filter('datetime')
+def format_datetime(value, format='%Y-%m-%d'):
+    return datetime.now().strftime(format)
 
 @app.route('/')
 def index():
