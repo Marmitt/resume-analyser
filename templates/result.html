@@ -16,6 +16,19 @@
       <a href="/download" class="btn btn-outline-primary mt-3">📄 Download PDF Report</a>
     </div>
 
+    <div class="card p-3 mb-4 bg-light text-start">
+        <h3>💡 Top Skills Found in Resume</h3>
+        {% if top_skills %}
+          <div>
+            {% for skill in top_skills %}
+              <span class="badge bg-primary me-1 mb-1">{{ skill }}</span>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted">No recognizable skills detected.</p>
+        {% endif %}
+      </div>          
+
     <div class="card p-4 mb-4 shadow-sm bg-light text-start">
       <h3>🔍 Missing Keywords</h3>
       {% if missing_keywords %}

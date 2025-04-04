@@ -1,6 +1,6 @@
 import os
 import re
-import fitz  # PyMuPDF
+import fitz
 import docx
 from flask import Flask, render_template, request, send_file
 from markupsafe import Markup
@@ -16,6 +16,16 @@ ALLOWED_EXTENSIONS = {'pdf', 'docx'}
 
 # Store last analysis in memory (for now)
 last_analysis = {}
+
+# Define known skills for extraction
+KNOWN_SKILLS = [
+    'python', 'flask', 'django', 'html', 'css', 'javascript', 'sql',
+    'mysql', 'postgresql', 'mongodb', 'git', 'github',
+    'docker', 'linux', 'aws', 'azure', 'gcp',
+    'react', 'vue', 'node', 'java', 'c#', 'c++',
+    'communication', 'teamwork', 'leadership', 'problem-solving', 'adaptability',
+    'critical thinking', 'time management', 'creativity'
+]
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -48,18 +58,23 @@ def upload():
             job_description=job_description
         )
 
+        # Extract top skills
+        top_skills = extract_skills(text)
+
         # Save to memory for PDF generation
         last_analysis['resume_text'] = highlighted_resume
         last_analysis['job_description'] = highlighted_jd
         last_analysis['match_percentage'] = match_percentage
         last_analysis['missing_keywords'] = missing_keywords
+        last_analysis['top_skills'] = top_skills
 
         return render_template(
             'result.html',
             resume_text=highlighted_resume,
             job_description=highlighted_jd,
             match_percentage=match_percentage,
-            missing_keywords=missing_keywords
+            missing_keywords=missing_keywords,
+            top_skills=top_skills
         )
 
     return "File type not allowed. Please upload a PDF or DOCX.", 400
@@ -118,6 +133,14 @@ def highlight_keywords(text, keywords, css_class):
         regex = re.compile(rf'\b({re.escape(word)})\b', re.IGNORECASE)
         text = regex.sub(rf'<span class="{css_class}">\1</span>', text)
     return text
+
+def extract_skills(resume_text):
+    found_skills = []
+    words = set(re.findall(r'\b\w+\b', resume_text.lower()))
+    for skill in KNOWN_SKILLS:
+        if skill.lower() in words:
+            found_skills.append(skill)
+    return sorted(found_skills)
 
 if __name__ == '__main__':
     app.run(debug=True)

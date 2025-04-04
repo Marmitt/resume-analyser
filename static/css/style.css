@@ -65,3 +65,9 @@ textarea::placeholder {
   color: #ff4f4f;
   font-weight: bold;
 }
+
+.badge {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 30px;
+}
