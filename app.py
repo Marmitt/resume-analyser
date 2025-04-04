@@ -1,9 +1,10 @@
 import os
-from flask import Flask, render_template, request
-from werkzeug.utils import secure_filename
-import fitz
-import docx
 import re
+import fitz  # PyMuPDF
+import docx
+from flask import Flask, render_template, request
+from markupsafe import Markup
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -32,19 +33,23 @@ def upload():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        text = extract_text(filepath)  
-        # Get job description from form
-        job_description = request.form.get('job_description', '')
+        # Extract text from file
+        text = extract_text(filepath)
+
         # Analyze match
-        match_percentage, missing_keywords = analyze_match(resume_text=text, job_description=job_description)
+        job_description = request.form.get('job_description', '')
+        match_percentage, missing_keywords, highlighted_resume, highlighted_jd = analyze_match(
+            resume_text=text,
+            job_description=job_description
+        )
 
         return render_template(
             'result.html',
-            resume_text=text,
-            job_description=job_description,
+            resume_text=highlighted_resume,
+            job_description=highlighted_jd,
             match_percentage=match_percentage,
             missing_keywords=missing_keywords
-            )
+        )
 
     return "File type not allowed. Please upload a PDF or DOCX.", 400
 
@@ -55,7 +60,6 @@ def extract_text(filepath):
         return extract_text_from_docx(filepath)
     return "Unsupported file type"
 
-# Extract text from PDF
 def extract_text_from_pdf(filepath):
     try:
         text = ""
@@ -66,7 +70,6 @@ def extract_text_from_pdf(filepath):
     except Exception as e:
         return f"[Error reading PDF: {e}]"
 
-# Extract text from DOCX
 def extract_text_from_docx(filepath):
     try:
         doc = docx.Document(filepath)
@@ -75,21 +78,27 @@ def extract_text_from_docx(filepath):
     except Exception as e:
         return f"[Error reading DOCX: {e}]"
 
-
 def analyze_match(resume_text, job_description):
-    # Normalize text
     resume_words = set(re.findall(r'\b\w+\b', resume_text.lower()))
     jd_words = set(re.findall(r'\b\w+\b', job_description.lower()))
-
-    # Consider only long-enough words
     jd_keywords = {word for word in jd_words if len(word) > 3}
 
     matched = resume_words.intersection(jd_keywords)
+    missing = jd_keywords - resume_words
+
+    resume_highlighted = highlight_keywords(resume_text, matched, "match")
+    job_highlighted = highlight_keywords(job_description, matched, "match")
+    job_highlighted = highlight_keywords(job_highlighted, missing, "missing")
+
     match_percent = round((len(matched) / len(jd_keywords)) * 100, 2) if jd_keywords else 0
 
-    missing = jd_keywords - resume_words
-    return match_percent, sorted(missing)
+    return match_percent, sorted(missing), Markup(resume_highlighted), Markup(job_highlighted)
 
+def highlight_keywords(text, keywords, css_class):
+    for word in sorted(keywords, key=len, reverse=True):
+        regex = re.compile(rf'\b({re.escape(word)})\b', re.IGNORECASE)
+        text = regex.sub(rf'<span class="{css_class}">\1</span>', text)
+    return text
 
 if __name__ == '__main__':
     app.run(debug=True)

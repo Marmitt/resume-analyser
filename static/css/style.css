@@ -53,3 +53,15 @@ textarea {
 textarea::placeholder {
   color: #ddd;
 }
+
+.match {
+  background-color: rgba(0, 255, 0, 0.2);
+  color: #00ff88;
+  font-weight: bold;
+}
+
+.missing {
+  background-color: rgba(255, 0, 0, 0.15);
+  color: #ff4f4f;
+  font-weight: bold;
+}
