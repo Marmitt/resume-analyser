@@ -6,8 +6,14 @@
   <body>
     <h1>Resume Analyzer</h1>
     <form action="/upload" method="post" enctype="multipart/form-data">
-      <input type="file" name="resume" required />
-      <button type="submit">Upload</button>
+      <label>Upload Resume (PDF or DOCX):</label><br />
+      <input type="file" name="resume" required /><br /><br />
+
+      <label>Paste Job Description:</label><br />
+      <textarea name="job_description" rows="10" cols="50" required></textarea
+      ><br /><br />
+
+      <button type="submit">Analyze</button>
     </form>
   </body>
 </html>

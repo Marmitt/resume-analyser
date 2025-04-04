@@ -1,10 +1,24 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Resume Text</title>
+    <title>Resume Analysis Result</title>
   </head>
   <body>
-    <h1>Extracted Resume Text</h1>
+    <h1>Resume Analyzer Results</h1>
+
+    <h2>Match Score: {{ match_percentage }}%</h2>
+
+    <h3>Missing Keywords:</h3>
+    <ul>
+      {% for word in missing_keywords %}
+      <li>{{ word }}</li>
+      {% endfor %}
+    </ul>
+
+    <h3>Resume Text:</h3>
     <pre>{{ resume_text }}</pre>
+
+    <h3>Job Description:</h3>
+    <pre>{{ job_description }}</pre>
   </body>
 </html>
