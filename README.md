@@ -2,7 +2,7 @@
 
 A smart, AI-assisted web app that analyzes resumes against job descriptions and highlights strengths, weaknesses, and keyword matches.
 
-Live Demo: [https://yourappname.onrender.com](https://yourappname.onrender.com)
+Live Demo: https://resume-analyser-xkwb.onrender.com/
 
 ---
 
