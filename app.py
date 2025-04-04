@@ -2,15 +2,20 @@ import os
 import re
 import fitz  # PyMuPDF
 import docx
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 from markupsafe import Markup
 from werkzeug.utils import secure_filename
+from xhtml2pdf import pisa
+from io import BytesIO
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # Max 5MB
 
 ALLOWED_EXTENSIONS = {'pdf', 'docx'}
+
+# Store last analysis in memory (for now)
+last_analysis = {}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -43,6 +48,12 @@ def upload():
             job_description=job_description
         )
 
+        # Save to memory for PDF generation
+        last_analysis['resume_text'] = highlighted_resume
+        last_analysis['job_description'] = highlighted_jd
+        last_analysis['match_percentage'] = match_percentage
+        last_analysis['missing_keywords'] = missing_keywords
+
         return render_template(
             'result.html',
             resume_text=highlighted_resume,
@@ -52,6 +63,14 @@ def upload():
         )
 
     return "File type not allowed. Please upload a PDF or DOCX.", 400
+
+@app.route('/download')
+def download():
+    rendered = render_template("export.html", **last_analysis)
+    pdf = BytesIO()
+    pisa_status = pisa.CreatePDF(rendered, dest=pdf)
+    pdf.seek(0)
+    return send_file(pdf, download_name="resume_analysis.pdf", as_attachment=True)
 
 def extract_text(filepath):
     if filepath.endswith('.pdf'):

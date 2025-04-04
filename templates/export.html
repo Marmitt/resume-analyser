@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+    h1, h2 {
+      color: #003366;
+    }
+    .match {
+      background-color: #ccffcc;
+      font-weight: bold;
+    }
+    .missing {
+      background-color: #ffcccc;
+      font-weight: bold;
+    }
+    pre {
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Resume Analysis Report</h1>
+  <h2>Match Score: {{ match_percentage }}%</h2>
+
+  <h3>Missing Keywords</h3>
+  <ul>
+    {% for word in missing_keywords %}
+      <li>{{ word }}</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Resume Text</h3>
+  <pre>{{ resume_text|safe }}</pre>
+
+  <h3>Job Description</h3>
+  <pre>{{ job_description|safe }}</pre>
+</body>
+</html>
