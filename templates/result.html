@@ -84,7 +84,21 @@
         </div>
       </div>
     </div>
-
+    
+    <div class="card p-4 mb-4 shadow-sm bg-light text-start">
+      <h3>📚 Detected Resume Sections</h3>
+      {% if sections %}
+        {% for name, content in sections.items() %}
+          <div class="mb-3">
+            <h5 class="text-primary">{{ name }}</h5>
+            <pre class="bg-white p-2 border">{{ content }}</pre>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted">No standard sections found in this resume.</p>
+      {% endif %}
+    </div>
+    
     <a href="/download" class="btn btn-outline-primary mt-3">📄 Download PDF Report</a>
   </div>
 

@@ -55,6 +55,9 @@ def upload():
 
         # Extract text from file
         text = extract_text(filepath)
+        
+        sections_detected = detect_sections(text)
+        last_analysis['sections'] = sections_detected
 
         # Analyze match
         job_description = request.form.get('job_description', '')
@@ -79,7 +82,8 @@ def upload():
             job_description=highlighted_jd,
             match_percentage=match_percentage,
             missing_keywords=missing_keywords,
-            top_skills=top_skills
+            top_skills=top_skills,
+            sections=sections_detected
         )
 
     return "File type not allowed. Please upload a PDF or DOCX.", 400
@@ -146,6 +150,38 @@ def extract_skills(resume_text):
         if skill.lower() in words:
             found_skills.append(skill)
     return sorted(found_skills)
+
+def detect_sections(text):
+    # Basic regex-based section detection
+    sections = {
+        "Education": "",
+        "Experience": "",
+        "Skills": "",
+        "Projects": "",
+        "Certifications": ""
+    }
+
+    # Normalize and split by lines
+    lines = text.splitlines()
+    current_section = None
+
+    for line in lines:
+        clean = line.strip().lower()
+        if "education" in clean:
+            current_section = "Education"
+        elif "experience" in clean or "work history" in clean:
+            current_section = "Experience"
+        elif "skill" in clean:
+            current_section = "Skills"
+        elif "project" in clean:
+            current_section = "Projects"
+        elif "certification" in clean:
+            current_section = "Certifications"
+        elif current_section and line.strip():
+            sections[current_section] += line.strip() + "\n"
+
+    # Clean up section values
+    return {k: v.strip() for k, v in sections.items() if v.strip()}
 
 if __name__ == '__main__':
     app.run(debug=True)

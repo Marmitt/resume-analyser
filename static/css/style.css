@@ -71,3 +71,9 @@ textarea::placeholder {
   padding: 8px 12px;
   border-radius: 30px;
 }
+
+pre {
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.5;
+}
