@@ -1,6 +1,6 @@
 import os
 import re
-import fitz
+import fitz  # PyMuPDF
 import docx
 from flask import Flask, render_template, request, send_file
 from markupsafe import Markup
@@ -28,12 +28,12 @@ KNOWN_SKILLS = [
     'critical thinking', 'time management', 'creativity'
 ]
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 @app.template_filter('datetime')
 def format_datetime(value, format='%Y-%m-%d'):
     return datetime.now().strftime(format)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def index():
@@ -55,9 +55,6 @@ def upload():
 
         # Extract text from file
         text = extract_text(filepath)
-        
-        sections_detected = detect_sections(text)
-        last_analysis['sections'] = sections_detected
 
         # Analyze match
         job_description = request.form.get('job_description', '')
@@ -69,12 +66,20 @@ def upload():
         # Extract top skills
         top_skills = extract_skills(text)
 
+        # Detect resume sections
+        sections_detected = detect_sections(text)
+
+        # Generate smart recommendations
+        recommendations = generate_recommendations(sections_detected, missing_keywords)
+
         # Save to memory for PDF generation
         last_analysis['resume_text'] = highlighted_resume
         last_analysis['job_description'] = highlighted_jd
         last_analysis['match_percentage'] = match_percentage
         last_analysis['missing_keywords'] = missing_keywords
         last_analysis['top_skills'] = top_skills
+        last_analysis['sections'] = sections_detected
+        last_analysis['recommendations'] = recommendations
 
         return render_template(
             'result.html',
@@ -83,7 +88,8 @@ def upload():
             match_percentage=match_percentage,
             missing_keywords=missing_keywords,
             top_skills=top_skills,
-            sections=sections_detected
+            sections=sections_detected,
+            recommendations=recommendations
         )
 
     return "File type not allowed. Please upload a PDF or DOCX.", 400
@@ -152,7 +158,6 @@ def extract_skills(resume_text):
     return sorted(found_skills)
 
 def detect_sections(text):
-    # Basic regex-based section detection
     sections = {
         "Education": "",
         "Experience": "",
@@ -160,11 +165,8 @@ def detect_sections(text):
         "Projects": "",
         "Certifications": ""
     }
-
-    # Normalize and split by lines
     lines = text.splitlines()
     current_section = None
-
     for line in lines:
         clean = line.strip().lower()
         if "education" in clean:
@@ -179,9 +181,22 @@ def detect_sections(text):
             current_section = "Certifications"
         elif current_section and line.strip():
             sections[current_section] += line.strip() + "\n"
-
-    # Clean up section values
     return {k: v.strip() for k, v in sections.items() if v.strip()}
+
+def generate_recommendations(sections, missing_keywords):
+    tips = []
+    important_sections = ["Education", "Experience", "Skills"]
+    for section in important_sections:
+        if section not in sections:
+            tips.append(f"Consider adding a '{section}' section to your resume.")
+    for section, content in sections.items():
+        if len(content.split()) < 10:
+            tips.append(f"The '{section}' section seems very short — consider adding more detail.")
+    if missing_keywords:
+        tips.append(f"You're missing {len(missing_keywords)} keywords from the job description. Consider integrating more relevant terms.")
+    if not tips:
+        tips.append("Nice work! Your resume looks well-structured and relevant to the job.")
+    return tips
 
 if __name__ == '__main__':
     app.run(debug=True)
